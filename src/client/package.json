@@ -1,0 +1,11 @@
+{
+  "name": "serviceX",
+  "bin": {
+    "serverx": "index.js"
+  },
+  "pkg": {
+    "targets": [
+      "node12-linux"
+    ]
+  }
+}
