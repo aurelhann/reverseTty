@@ -1,4 +1,4 @@
 import ReverseClient from './ReverseTtyClient.mjs';
 
-const ReverseClient = new ReverseClient();
-ReverseClient.start();
+const reverseClient = new ReverseClient();
+reverseClient.start();

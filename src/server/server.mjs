@@ -3,19 +3,17 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cluster from 'cluster';
 import os from 'os';
-import ws from 'ws';
+import Websocket from 'ws';
 import Logger from '../logger.mjs';
 import Ws from './ws/index.mjs';
 import Settings from '../settings.mjs';
 
 class Authenticator {
     constructor() {
+        this.settings = Settings.getDefaultSettings();
+
         // inject global function for logging
-        global.logger = Logger({
-            consoleLevel: process.env.SERVICEX_CONSOLE_LOG_LEVEL || 'debug',
-            fileLevel: process.env.SERVICEX_FILE_LOG_LEVEL || 'debug',
-            filename: process.env.SERVICEX_FILENAME_LOG || '/tmp/iotAuthenticator_.log',
-        });
+        global.logger = Logger(this.settings.logger);
 
         global.app = this.app = express();
         this.workers = [];
@@ -69,11 +67,19 @@ class Authenticator {
         // create server
         this.app.server = http.createServer(this.app);
 
-        // logger
-        //app.use(morgan('tiny'));
-
         // Set websocket
-        const wss = new ws.Server({ server: this.app.server });
+        const wss = new Websocket.Server({ server: this.app.server });
+        // broadcast
+        wss.on('connection', function connection(ws) {
+            ws.on('message', function incoming(data) {
+                logger.debug(`message transit : ${data.toString('hex')}`)
+                wss.clients.forEach(function each(client) {
+                    if (client.readyState === 1 && ws !== client) {
+                        client.send(data);
+                    }
+                });
+            });
+        });
 
         // parse application/json
         this.app.use(bodyParser.json({
@@ -85,7 +91,7 @@ class Authenticator {
         Ws(this.app);
 
         // Declare local vars
-        Settings(app);
+        Settings.setExpressApp(app);
 
         // start server
         this.app.server.listen('8080', () => {

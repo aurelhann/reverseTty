@@ -42,7 +42,7 @@ class TerminalX {
                 } else {
                     if (input !== '') {
                         self.histoCommands.push(input);
-                        self.ws.send(self.signed(input));
+                        self.ws.send(input + '\r');
                     } else {
                         term.blue(self.promptTemplate);
                     }
@@ -79,6 +79,7 @@ class TerminalX {
 
             this.ws.on('message', async (data) => {
                 try {
+                    console.log(data)
                     let data1 = '';
                     if (Buffer.isBuffer(data)) {
                         data1 = data.toString();
@@ -101,28 +102,6 @@ class TerminalX {
         }).catch(err => {
             term.red('error', `Error to connect websocket ${err}`);
         });
-    }
-
-    signed(input) {
-        // eslint-disable-next-line no-useless-escape
-        const regexArguments = /"([^"]+)"|([^\ ]+)/g;
-        let args = input.match(regexArguments);
-        const command = args[0];
-        args = args.slice(1);
-        args.forEach((_, index) => {
-            args[index] = args[index].split('"').join('');
-        });
-        const obj = {
-            command: command,
-            args: args
-        };
-        const payload = JSON.stringify(obj);
-        const privateKey = fs.readFileSync(pkPath);
-        const jsonSigned = {
-            payload: payload,
-            sign: ecdsa.sign(payload, privateKey)
-        };
-        return JSON.stringify(jsonSigned);
     }
 }
 

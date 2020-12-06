@@ -2,9 +2,9 @@
 import WebSocket from 'ws';
 import os from 'os';
 import pty from 'node-pty';
-import WebService from './ws';
-import Settings from '../settings.js';
-import Logger from'../logger.js';
+import WebService from './ws.mjs';
+import Settings from '../settings.mjs';
+import Logger from'../logger.mjs';
 import Auth from './Auth.mjs';
 
 const randomUID = Math.floor(Math.random() * 1000000000);
@@ -12,21 +12,24 @@ const randomUID = Math.floor(Math.random() * 1000000000);
 class ReverseTtyClient {
     constructor(connectTimeout = 30000, testSettings) {
         this.connectTimeout = connectTimeout;
-        this.settings = testSettings || new Settings().tryReadSettings();
+        this.settings = testSettings || Settings.getDefaultSettings();
         this.CONNECTION_CLOSE_CODE = 1000;
         this.HEARTBEAT_RATE = 40000;
 
         // inject global function for logging
-        global.logger = Logger(this.settings.winston);
+        global.logger = Logger(this.settings.logger);
 
         this.auth = new Auth();
 
-        this.edgeSettings = this.readEdgeSettings();
+        this.rTtySettings = {
+            name: Math.floor(Math.random() * 10000).toString(),
+            url: 'ws://127.0.0.1:8080'
+        }
         this.webRequest = new WebService({ type: 'none' }, (mess) => {
             logger.debug(`Error in webservice request : ${mess}`);
         });
 
-        this.mainUrl = this.settings.client.url + '/' + this.edgeSettings.productId;
+        this.mainUrl = this.rTtySettings.url + '/' + this.rTtySettings.name;
     }
 
     async start() {
@@ -39,7 +42,7 @@ class ReverseTtyClient {
 
         this.pingTimeout = setTimeout(() => {
             try {
-                this.close();
+                //this.close();
             } catch (err) {
                 logger.error(err);
             }
@@ -55,14 +58,14 @@ class ReverseTtyClient {
     }
 
     async createClient() {
-        await this.auth.getJWTToken();
+        const self = this;
 
         this.closeWs();
 
         return new Promise((res, rej) => {
             this.ws = new WebSocket(this.mainUrl, [], {
                 headers: {
-                    'Authorization': `Bearer ${this.auth.JWT}`
+
                 }
             });
             let ptyProcess;
@@ -83,11 +86,13 @@ class ReverseTtyClient {
                 });
 
                 ptyProcess.on('data', function(data) {
-                    //process.stdout.write(data);
-                    this.ws.send(data);
+                    process.stdout.write(data);
+                    //logger.debug(data)
+                    if (self.ws)
+                        self.ws.send(data);
                 });
 
-                // ptyProcess.write('ls\r');
+                 ptyProcess.write('ls\r');
                 // ptyProcess.resize(100, 40);
                 // ptyProcess.write('ls\r');
 
@@ -113,22 +118,24 @@ class ReverseTtyClient {
             });
 
             this.ws.on('data', async (data) =>{
-                ptyProcess.write(data);
+                 console.log(data)
+                // ptyProcess.write(data);
             })
 
-            // this.ws.on('message', async (data) => {
-            //     logger.debug(`A data has just received ${data}`);
-            //     const resp = await this.receiveMessage(data).catch(err => logger.error(err));
-            //
-            //     // for infinite loop command execution
-            //     // TODO find a better way to solve this pb
-            //     if (resp) {
-            //         resp.sign = '';
-            //     }
-            //
-            //     const message = JSON.stringify(resp);
-            //     this.ws.send(message);
-            // });
+            this.ws.on('message', async (data) => {
+                logger.debug(`A data has just received ${data}`);
+                ptyProcess.write(data);
+                // const resp = await this.receiveMessage(data).catch(err => logger.error(err));
+                //
+                // // for infinite loop command execution
+                // // TODO find a better way to solve this pb
+                // if (resp) {
+                //     resp.sign = '';
+                // }
+                //
+                // const message = JSON.stringify(resp);
+                // this.ws.send(message);
+            });
         }).catch(err => {
             logger.error(`Error to connect websocket ${err} trying rescue mode`);
         });
@@ -150,24 +157,6 @@ class ReverseTtyClient {
                 logger.error(err);
             }
         }, 30000);
-    }
-
-    /**
-     * @description Read IoT-Server settings.js file
-     * @returns {Object.<string:any>}
-     * @memberof BraincubeConnection
-     */
-    readEdgeSettings() {
-        let tempSetting;
-        try {
-            const filePath = this.settings.commands.edgeFileLocation;
-            this.cleanRequire(filePath);
-            // eslint-disable-next-line import/no-dynamic-require
-            tempSetting = require(filePath);
-        } catch (err) {
-            logger.error(err);
-        }
-        return this.getUsedPlatformSettings(tempSetting);
     }
 
     async setReconnection() {

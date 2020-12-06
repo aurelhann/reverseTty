@@ -9,6 +9,7 @@
     "doc": "openapi-comment-parser . openapi.json",
     "startServer": "node --experimental-json-modules src/server/index.mjs",
     "startTerm": "node --experimental-json-modules src/cli/index.mjs",
+    "startCli": "node --experimental-json-modules src/client/index.mjs",
     "test": "echo \"Seeems good here\"",
     "postversion": "git add . --follow-tags",
     "build": "rollup -c"
@@ -26,6 +27,7 @@
     "bunyan": "^1.8.14",
     "date-fns": "^2.16.1",
     "express": "^4.17.1",
+    "https-proxy-agent": "^5.0.0",
     "jsonwebtoken": "^8.5.1",
     "node-pty": "^0.9.0",
     "rotating-file-stream": "^2.1.3",
