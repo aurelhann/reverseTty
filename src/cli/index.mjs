@@ -50,6 +50,9 @@ class TerminalX {
                 }
             }
         );
+        term.on( 'key' , function( name , matches , data ) {
+            if ( name === 'CTRL_C' ) { self.ws.send('\x03') }
+        } ) ;
     }
 
     async createClient() {

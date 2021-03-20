@@ -9,10 +9,12 @@ import path from 'path';
 
 export default [
     {
-        input: './src/index.mjs',
+        input: './src/server/index.mjs',
         output: {
-            file: path.join(process.cwd(), '.bin', 'iotAuthenticator.js'),
-            format: 'es',
+            file: path.join(process.cwd(), '.bin', 'reverseTtyServer.mjs'),
+            format: 'esm',
+            banner: '#! /bin/sh\n' +
+                '":" //# comment; exec /usr/bin/env node --experimental-modules --no-warnings --harmony "$0" "$@"'
         },
         plugins: [
             progress(),
