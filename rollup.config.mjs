@@ -23,7 +23,7 @@ export default [
             }),
             json(),
             commonjs(),
-            rollupPluginNode()
+            rollupPluginNode({finalRenderES7: true})
         ],
     }
 ];
