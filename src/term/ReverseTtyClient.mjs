@@ -19,7 +19,7 @@ class ReverseTtyClient {
         this.settings = testSettings || {
             serverUrl: argv.serverUrl || 'ws://127.0.0.1:8080',
             uid: argv.uid || Uid(),
-            logFullPath: process.env.EP_AUTH_FULLPATH_LOGS || '/tmp/reverseTty.logs',
+            logFullPath: argv.fullpathLogs || '/tmp/reverseTty.logs',
         }
         this.CONNECTION_CLOSE_CODE = 1000;
         this.HEARTBEAT_RATE = 40000;

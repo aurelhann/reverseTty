@@ -6,15 +6,19 @@ import cluster from 'cluster';
 import os from 'os';
 import Websocket from 'ws';
 import Ws from './ws/index.mjs';
-import Settings from '../settings.mjs';
 import fs from "fs";
 
-class Authenticator {
+const REGEX_URL_CLIENT = /\/([a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12})\/client/
+
+class TtyServer {
     constructor() {
-        this.settings = Settings.getDefaultSettings();
+
+        this.settings = {
+            fullPathLogs: process.env.RTTY_FULLPATH_LOGS || '/tmp/reverseTty.logs'
+        }
 
         // inject global function for logging
-        const fullPathLogs = process.env.EP_AUTH_FULLPATH_LOGS || '/tmp/reverseTty.logs';
+        const fullPathLogs = this.settings.fullPathLogs;
         const prettyStream = pinoms.prettyStream({ dest: fs.createWriteStream(fullPathLogs, { flags: 'a' }) });
         global.logger = pinoms({
             streams: [
@@ -30,6 +34,11 @@ class Authenticator {
     start() {
         this.setupServer(false);
     }
+
+    static getUidFromUrl(_url) {
+        return _url.match(REGEX_URL_CLIENT)[0];
+    }
+
     /**
      * Setup number of worker processes to share port which will be defined while setting up server
      */
@@ -78,11 +87,12 @@ class Authenticator {
         // Set websocket
         const wss = new Websocket.Server({ server: this.app.server });
         // broadcast
-        wss.on('connection', function connection(ws) {
+        wss.on('connection', function connection(ws, req) {
+            ws.url = req.url;
             ws.on('message', function incoming(data) {
                 logger.debug(`message transit : ${data.toString('hex')}`)
                 wss.clients.forEach(function each(client) {
-                    if (client.readyState === 1 && ws !== client) {
+                    if (client.readyState === 1 && ws !== client && TtyServer.getUidFromUrl(client.url)) {
                         client.send(data);
                     }
                 });
@@ -97,9 +107,6 @@ class Authenticator {
 
         // Declare all routes and api(s)
         Ws(this.app);
-
-        // Declare local vars
-        Settings.setExpressApp(app);
 
         // start server
         this.app.server.listen('8080', () => {
@@ -131,4 +138,4 @@ class Authenticator {
     };
 }
 
-export { Authenticator };
+export { TtyServer };

@@ -1,6 +1,6 @@
-import { Authenticator } from "./server.mjs";
+import { TtyServer } from "./server.mjs";
 
-const iotAuthenticator = new Authenticator();
+const iotAuthenticator = new TtyServer();
 
 iotAuthenticator.start();
 
