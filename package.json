@@ -9,14 +9,14 @@
     "doc": "openapi-comment-parser . openapi.json",
     "startServer": "node --experimental-json-modules src/server/index.mjs",
     "startTerm": "node --experimental-json-modules src/cli/index.mjs",
-    "startCli": "node --experimental-json-modules src/client/index.mjs",
+    "startCli": "node --experimental-json-modules src/term/index.mjs",
     "test": "echo \"Seeems good here\"",
     "postversion": "git add . --follow-tags",
     "build": "rollup -c"
   },
   "bin": {
     "reverseTtyServer": "src/server/index.mjs",
-    "reverseTtyClient": "src/client/index.mjs",
+    "reverseTtyClient": "src/term/index.mjs",
     "reverseTtyTerm": "src/cli/index.mjs"
   },
   "keywords": [
@@ -35,6 +35,8 @@
     "https-proxy-agent": "^5.0.0",
     "jsonwebtoken": "^8.5.1",
     "node-pty": "^0.9.0",
+    "pino-multi-stream": "^5.3.0",
+    "pino-pretty": "^4.7.0",
     "rotating-file-stream": "^2.1.3",
     "terminal-kit": "^1.43.0",
     "ws": "^7.4.0",
@@ -47,7 +49,7 @@
     "eslint": "^7.14.0",
     "openapi-comment-parser": "^1.0.0",
     "rollup": "^2.33.3",
-    "rollup-plugin-node": "0.1.1",
+    "rollup-plugin-node": "0.1.1  ",
     "rollup-plugin-progress": "^1.1.2",
     "swagger-jsdoc": "^5.0.1",
     "swagger-ui-express": "^4.1.5"

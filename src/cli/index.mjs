@@ -82,7 +82,7 @@ class TerminalX {
 
             this.ws.on('message', async (data) => {
                 try {
-                    console.log(data)
+                    //console.log(data.toString())
                     let data1 = '';
                     if (Buffer.isBuffer(data)) {
                         data1 = data.toString();

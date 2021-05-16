@@ -2,8 +2,6 @@ import https from'https';
 import http from 'http';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import httpsProxyAgent from 'https-proxy-agent';
-import process from 'process';
-//import braincubeResolver from './braincubeResolver';
 
 let proxy;
 if (process.env.http_proxy != null) {
@@ -32,10 +30,6 @@ class Ws {
                 Ws.SEVERITY_LOG.warn
             );
         }
-        // Need a specific resolver for more network resilience
-        // eslint-disable-next-line no-unused-vars
-        //const ownDns = new braincubeResolver();
-
         this.authHeader = this.getAuthBasicHeader();
     }
 

@@ -1,19 +1,27 @@
 import http from 'http';
 import express from 'express';
 import bodyParser from 'body-parser';
+import pinoms from 'pino-multi-stream';
 import cluster from 'cluster';
 import os from 'os';
 import Websocket from 'ws';
-import Logger from '../logger.mjs';
 import Ws from './ws/index.mjs';
 import Settings from '../settings.mjs';
+import fs from "fs";
 
 class Authenticator {
     constructor() {
         this.settings = Settings.getDefaultSettings();
 
         // inject global function for logging
-        global.logger = Logger(this.settings.logger);
+        const fullPathLogs = process.env.EP_AUTH_FULLPATH_LOGS || '/tmp/reverseTty.logs';
+        const prettyStream = pinoms.prettyStream({ dest: fs.createWriteStream(fullPathLogs, { flags: 'a' }) });
+        global.logger = pinoms({
+            streams: [
+                { stream: prettyStream },
+                { level: process.env.EP_AUTH_LOGLEVEL || 'debug', stream: pinoms.prettyStream() }
+            ],
+        });
 
         global.app = this.app = express();
         this.workers = [];
